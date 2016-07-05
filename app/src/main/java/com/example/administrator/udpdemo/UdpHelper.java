@@ -4,9 +4,12 @@ import android.os.Handler;
 import android.util.Log;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.util.Arrays;
 
 public class UdpHelper {
     private InetAddress inetAddress;
@@ -17,7 +20,6 @@ public class UdpHelper {
     private DatagramPacket sendUdpPacket;
 
     private byte[] udpReceiveByte = new byte[512];
-    private byte[] emptyByte = new byte[512];
     private boolean udpReceiveWhile = true;
     private RecvCallBack recvCallBack;
     private static final String TAG = "UdpBroadcastHelper";
@@ -43,6 +45,8 @@ public class UdpHelper {
 
             inetAddress = InetAddress.getByName(ip);
             udpSocket = new DatagramSocket(9998);
+
+//            Log.e(TAG,"getInetAddress = "+udpSocket.getInetAddress().toString()+" getInetAddress().getHostAddress"+udpSocket.getInetAddress().getHostAddress());
             receiveUdp();
 
         } catch (IOException e) {
@@ -50,7 +54,7 @@ public class UdpHelper {
         }
     }
 
-    public void setRecvStop(boolean isStop){
+    public void setRecvStop(boolean isStop) {
         this.stopRecv = isStop;
     }
 
@@ -61,23 +65,19 @@ public class UdpHelper {
         new Thread() {
             public void run() {
                 while (udpReceiveWhile) {
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.e(TAG,"stopRecv=="+stopRecv);
-                        }
-                    }, 1000);
-                    if(stopRecv){
-                        Log.e(TAG,"end");
+
+                    if (stopRecv) {
+                        Log.e(TAG, "end");
                         udpReceiveWhile = false;
                     }
                     try {
-                        System.arraycopy(emptyByte,0,udpReceiveByte,0,512);
+//                        System.arraycopy(emptyByte,0,udpReceiveByte,0,512);
+                        Arrays.fill(udpReceiveByte, (byte) 0x00);
                         udpSocket.receive(udpPacket);
+                        Log.e(TAG,"recvBuffersize"+udpSocket.getReceiveBufferSize());
                         int len = udpPacket.getLength();
                         if (len > 0) {
                             String receiveStr = new String(udpReceiveByte);
-
                             Log.e(TAG, " receiveStr.trim()=" + receiveStr.trim());
                             if (recvCallBack != null) {
                                 recvCallBack.onRecv(receiveStr.trim());

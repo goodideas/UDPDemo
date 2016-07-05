@@ -18,26 +18,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ToggleButton tbConnect;
     private TextView tvShowRecv;
     private EditText etInput;
-    private Button btnSend,btnStop;
-//    private Handler handler;
+    private Button btnSend, btnStop;
+    //    private Handler handler;
     private UdpHelper udpHelper;
     private static final String IP = "192.168.0.119";
     private String recvData;
     private RecvCallBack recvCallBack;
+
+    private SingleUdp singleUdp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findView();
-//        handler = new Handler(){
-//            @Override
-//            public void handleMessage(Message msg) {
-//
-//
-////                super.handleMessage(msg);
-//            }
-//        };
+
 
         etIp.setText(IP);
         //滚动
@@ -57,51 +52,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tvShowRecv.append(recvData+"\n");
+                        tvShowRecv.append(recvData + "\n");
                     }
                 });
             }
         };
 
-
+        singleUdp = SingleUdp.getUdpInstance();
         btnSend.setOnClickListener(this);
         btnStop.setOnClickListener(this);
         tbConnect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    udpHelper = UdpHelper.getInstance(etIp.getText().toString());
-                    udpHelper.setRecvCallBack(recvCallBack);
-                }else{
-                    udpHelper.closeUdp();
+//                if(isChecked){
+//                    udpHelper = UdpHelper.getInstance(etIp.getText().toString());
+//                    udpHelper.setRecvCallBack(recvCallBack);
+//                }else{
+//                    udpHelper.closeUdp();
+//                }
+
+                if (isChecked) {
+
+                    singleUdp.setUdpIp(etIp.getText().toString());
+                    singleUdp.setUdpRemotePort(9987);
+                    singleUdp.setUdpLocalPort(9988);
+                    singleUdp.start();
+                    singleUdp.setOnReceiveListen(new OnReceiveListen() {
+                        @Override
+                        public void onReceiveData(byte[] data) {
+                            Log.e(TAG,"data="+new String(data).trim());
+                        }
+                    });
+
+                } else {
+                    singleUdp.stop();
                 }
+
             }
         });
 
     }
 
     private void findView() {
-        etIp = (EditText)findViewById(R.id.etIp);
-        tbConnect = (ToggleButton)findViewById(R.id.tbConnect);
-        tvShowRecv = (TextView)findViewById(R.id.tvShowRecv);
-        etInput = (EditText)findViewById(R.id.etInput);
-        btnSend = (Button)findViewById(R.id.btnSend);
-        btnStop = (Button)findViewById(R.id.btnStop);
+        etIp = (EditText) findViewById(R.id.etIp);
+        tbConnect = (ToggleButton) findViewById(R.id.tbConnect);
+        tvShowRecv = (TextView) findViewById(R.id.tvShowRecv);
+        etInput = (EditText) findViewById(R.id.etInput);
+        btnSend = (Button) findViewById(R.id.btnSend);
+        btnStop = (Button) findViewById(R.id.btnStop);
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.btnSend:
-                if(udpHelper!=null){
-                    udpHelper.send(etInput.getText().toString().getBytes());
-                }
+//                if(udpHelper!=null){
+//                    udpHelper.send(etInput.getText().toString().getBytes());
+//                }
+                singleUdp.send(etInput.getText().toString().getBytes());
                 break;
             case R.id.btnStop:
-                if(udpHelper!=null){
-                    Log.e(TAG,"udpHelper.setRecvStop(true);");
-                    udpHelper.setRecvStop(true);
-                }
+//                if(udpHelper!=null){
+//                    Log.e(TAG,"udpHelper.setRecvStop(true);");
+//                    udpHelper.setRecvStop(true);
+//                }
                 break;
 
         }
