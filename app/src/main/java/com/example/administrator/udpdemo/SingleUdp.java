@@ -1,5 +1,8 @@
 package com.example.administrator.udpdemo;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -29,7 +32,6 @@ public class SingleUdp {
     private InetAddress inetAddress;
     private byte[] udpReceiveBytes;
     private OnReceiveListen onReceiveListen;//接收监听
-    private boolean udpReceiveWhile = false;
     private Thread udpReceiveThread;
     private static SingleUdp UdpInstance;
 
@@ -49,11 +51,6 @@ public class SingleUdp {
     //设置监听
     public void setOnReceiveListen(OnReceiveListen receiveListen) {
         this.onReceiveListen = receiveListen;
-    }
-
-    //设置接收缓存大小
-    public void setReceiveCache(int cacheValue) {
-        this.udpReceiveBytes = new byte[cacheValue];
     }
 
     //设置Udp的IP
@@ -105,9 +102,10 @@ public class SingleUdp {
 
     //发送
     public void send(byte[] data){
-
-        udpSendPacket = new DatagramPacket(
-        data, data.length, inetAddress, udpRemotePort);
+        if(udpSendPacket==null){
+            udpSendPacket = new DatagramPacket(
+                    data, data.length, inetAddress, udpRemotePort);
+        }
 
         new Thread() {
             @Override
@@ -115,10 +113,11 @@ public class SingleUdp {
                 try {
                     if (udpSocket != null) {
                         udpSocket.send(udpSendPacket);
-                        Log.e(TAG, "udp发送");
+                        Log.e(TAG, "udp发送成功！");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Log.e(TAG, "udp发送失败！");
                 }
             }
         }.start();
@@ -150,7 +149,27 @@ public class SingleUdp {
             }
         };
         udpReceiveThread.start();
+//        myHandler myHandler = new myHandler(Looper.myLooper());
+//        Message message = myHandler.obtainMessage();
+//        message.what = 123;
+//        message.sendToTarget();
+
     }
+
+//    class myHandler extends Handler{
+//
+//        public myHandler(Looper looper){
+//            super(looper);
+//        }
+//
+//        @Override
+//        public void handleMessage(Message msg) {
+////            super.handleMessage(msg);
+//            if(msg.what == 123){
+//                Log.e(TAG,"myHandler接收");
+//            }
+//        }
+//    }
 
 }
 
